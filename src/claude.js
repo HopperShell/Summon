@@ -3,6 +3,21 @@ import kill from 'tree-kill';
 
 const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
+const SYSTEM_PROMPT = `You are a coding assistant in a Slack conversation. You have full access to the project's codebase.
+
+When you complete a task:
+- Explain what you changed and why, with relevant code snippets
+- Mention files you created, modified, or deleted
+- If you ran commands, show the output
+- Suggest logical next steps if applicable
+
+When asked questions:
+- Be conversational and thorough
+- Show relevant code when it helps explain
+- Ask clarifying questions when the request is ambiguous
+
+Keep responses well-structured with short paragraphs. Use markdown formatting — it renders in Slack.`;
+
 export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgress } = {}) {
   const args = ['-p', prompt];
 
@@ -14,6 +29,7 @@ export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgre
     }
   }
 
+  args.push('--append-system-prompt', SYSTEM_PROMPT);
   args.push('--output-format', 'stream-json', '--verbose');
   args.push('--dangerously-skip-permissions');
 
