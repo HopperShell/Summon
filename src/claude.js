@@ -6,8 +6,8 @@ const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
 export async function runClaude(prompt, projectDir) {
   const proc = spawn(
     'claude',
-    ['-p', prompt, '--project-dir', projectDir],
-    { env: { ...process.env, NO_COLOR: '1' } }
+    ['-p', prompt, '--dangerously-skip-permissions'],
+    { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, NO_COLOR: '1' } }
   );
 
   let stdout = '';

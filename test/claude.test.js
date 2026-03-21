@@ -33,8 +33,8 @@ describe('runClaude', () => {
 
     expect(spawn).toHaveBeenCalledWith(
       'claude',
-      ['-p', 'do something', '--project-dir', '/projects/my-app'],
-      expect.objectContaining({ env: expect.any(Object) })
+      ['-p', 'do something'],
+      expect.objectContaining({ cwd: '/projects/my-app', env: expect.any(Object) })
     );
     expect(result).toEqual({ success: true, output: 'response' });
   });

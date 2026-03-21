@@ -8,7 +8,7 @@ import { listProjects, matchProject } from './projects.js';
 import { runClaude } from './claude.js';
 import { chunkResponse } from './chunker.js';
 
-const PROJECTS_DIR = process.env.PROJECTS_DIR || '/projects';
+const PROJECTS_DIR = process.env.PROJECTS_DIR || `${process.env.HOME}/Projects`;
 const ALLOWED_USER_IDS = process.env.ALLOWED_USER_IDS
   ? process.env.ALLOWED_USER_IDS.split(',').map((id) => id.trim())
   : [];
@@ -46,14 +46,19 @@ app.message(async ({ message, say, client }) => {
   const route = routeMessage(message.text);
   const session = getSession(userId);
 
+  // Prefix helper — shows current project like a terminal prompt
+  const prefix = session.activeProject
+    ? `:file_folder: *${session.activeProject}* ~ `
+    : '';
+
   switch (route.type) {
     case 'list_projects': {
       const projects = listProjects(PROJECTS_DIR);
       if (projects.length === 0) {
-        await say('No projects found in the projects directory.');
+        await say(`${prefix}No projects found in the projects directory.`);
       } else {
         const list = projects.map((p) => `• ${p}`).join('\n');
-        await say(`Here are your projects:\n${list}`);
+        await say(`${prefix}Here are your projects:\n${list}`);
       }
       break;
     }
@@ -63,11 +68,11 @@ app.message(async ({ message, say, client }) => {
       const match = matchProject(route.query, projects);
       if (match) {
         session.activeProject = match;
-        await say(`Switched to *${match}*. What do you want to do?`);
+        await say(`:file_folder: *${match}* ~ Switched. What do you want to do?`);
       } else {
         const list = projects.map((p) => `• ${p}`).join('\n');
         await say(
-          `Couldn't find a project matching "${route.query}". Available projects:\n${list}`
+          `${prefix}Couldn't find a project matching "${route.query}". Available projects:\n${list}`
         );
       }
       break;
@@ -75,7 +80,7 @@ app.message(async ({ message, say, client }) => {
 
     case 'current_project': {
       if (session.activeProject) {
-        await say(`You're working on *${session.activeProject}*.`);
+        await say(`${prefix}You're here.`);
       } else {
         await say('No project selected. Say "work on <project>" to pick one.');
       }
@@ -87,7 +92,7 @@ app.message(async ({ message, say, client }) => {
         const projects = listProjects(PROJECTS_DIR);
         const list = projects.map((p) => `• ${p}`).join('\n');
         await say(
-          `Pick a project first. Say "work on <project>".\n\nAvailable:\n${list}`
+          `No project selected. Say "work on <project>".\n\nAvailable:\n${list}`
         );
         return;
       }
@@ -99,8 +104,8 @@ app.message(async ({ message, say, client }) => {
 
       session.busy = true;
 
-      // Quote the prompt as the first message in the thread
-      const promptMsg = await say(`> ${route.prompt}`);
+      // Quote the prompt and acknowledge receipt
+      const promptMsg = await say(`${prefix}> ${route.prompt}\n\n:hourglass_flowing_sand: Working on it...`);
       const thread_ts = promptMsg.ts;
 
       try {
