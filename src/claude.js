@@ -1,18 +1,32 @@
 import { spawn } from 'child_process';
 import kill from 'tree-kill';
 
-const TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
-export async function runClaude(prompt, projectDir) {
-  const proc = spawn(
-    'claude',
-    ['-p', prompt, '--dangerously-skip-permissions'],
-    { cwd: projectDir, stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, NO_COLOR: '1' } }
-  );
+export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgress } = {}) {
+  const args = ['-p', prompt];
 
-  let stdout = '';
+  if (sessionId) {
+    if (isNew) {
+      args.push('--session-id', sessionId);
+    } else {
+      args.push('--resume', sessionId);
+    }
+  }
+
+  args.push('--output-format', 'stream-json', '--verbose');
+  args.push('--dangerously-skip-permissions');
+
+  const proc = spawn('claude', args, {
+    cwd: projectDir,
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, NO_COLOR: '1' },
+  });
+
+  let fullResult = '';
   let stderr = '';
   let timedOut = false;
+  let buffer = '';
 
   const timeout = setTimeout(() => {
     timedOut = true;
@@ -20,7 +34,28 @@ export async function runClaude(prompt, projectDir) {
   }, TIMEOUT_MS);
 
   proc.stdout.on('data', (data) => {
-    stdout += data.toString();
+    buffer += data.toString();
+    const lines = buffer.split('\n');
+    buffer = lines.pop(); // keep incomplete line in buffer
+
+    for (const line of lines) {
+      if (!line.trim()) continue;
+      try {
+        const event = JSON.parse(line);
+        if (event.type === 'assistant' && event.message?.content) {
+          for (const block of event.message.content) {
+            if (block.type === 'text' && block.text) {
+              onProgress?.(block.text);
+            }
+          }
+        }
+        if (event.type === 'result') {
+          fullResult = event.result || '';
+        }
+      } catch {
+        // skip unparseable lines
+      }
+    }
   });
 
   proc.stderr.on('data', (data) => {
@@ -31,9 +66,9 @@ export async function runClaude(prompt, projectDir) {
     proc.on('close', (code) => {
       clearTimeout(timeout);
       if (timedOut) {
-        resolve({ success: false, error: 'Claude timed out after 5 minutes' });
+        resolve({ success: false, error: 'Claude timed out after 10 minutes' });
       } else if (code === 0) {
-        resolve({ success: true, output: stdout });
+        resolve({ success: true, output: fullResult });
       } else {
         resolve({
           success: false,
