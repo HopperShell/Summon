@@ -1,49 +1,25 @@
-const NEW_CHAT_PATTERNS = [
-  /\bnew\s+chat\b/i,
-  /\bstart\s+over\b/i,
-  /^reset$/i,
-];
-
-const LIST_PATTERNS = [
-  /^list\s+projects?$/i,
-  /^show\s+projects?$/i,
-  /^what\s+projects?\b/i,
-  /^my\s+projects?$/i,
-];
-
-const SWITCH_PATTERNS = [
-  /(?:work on|switch to|open|use)\s+(.+)/i,
-];
-
-const CURRENT_PATTERNS = [
-  /\b(?:what|which|current)\s+project\b/i,
-];
-
 export function routeMessage(text) {
   const trimmed = text.trim();
 
-  for (const pattern of NEW_CHAT_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      return { type: 'new_chat' };
-    }
-  }
+  // Commands start with !
+  if (trimmed.startsWith('!')) {
+    const parts = trimmed.slice(1).trim().split(/\s+/);
+    const cmd = parts[0]?.toLowerCase();
+    const arg = parts.slice(1).join(' ').trim();
 
-  for (const pattern of CURRENT_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      return { type: 'current_project' };
-    }
-  }
-
-  for (const pattern of LIST_PATTERNS) {
-    if (pattern.test(trimmed)) {
-      return { type: 'list_projects' };
-    }
-  }
-
-  for (const pattern of SWITCH_PATTERNS) {
-    const match = trimmed.match(pattern);
-    if (match) {
-      return { type: 'switch_project', query: match[1].trim() };
+    switch (cmd) {
+      case 'new':
+        return { type: 'new_chat' };
+      case 'projects':
+        return { type: 'list_projects' };
+      case 'work':
+        return arg ? { type: 'switch_project', query: arg } : { type: 'list_projects' };
+      case 'status':
+        return { type: 'current_project' };
+      case 'help':
+        return { type: 'help' };
+      default:
+        return { type: 'help' };
     }
   }
 

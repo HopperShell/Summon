@@ -43,6 +43,20 @@ app.message(async ({ message, say, client }) => {
     : '';
 
   switch (route.type) {
+    case 'help': {
+      await say([
+        '*Commands:*',
+        '`!work <project>` — switch to a project',
+        '`!projects` — list available projects',
+        '`!new` — start a fresh conversation',
+        '`!status` — show current project & session',
+        '`!help` — show this message',
+        '',
+        'Anything else goes straight to Claude.',
+      ].join('\n'));
+      break;
+    }
+
     case 'new_chat': {
       resetSession();
       const newId = getSession().sessionId.slice(0, 4);
