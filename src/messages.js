@@ -5,7 +5,10 @@ const NEW_CHAT_PATTERNS = [
 ];
 
 const LIST_PATTERNS = [
-  /\b(list|show|what)\b.*\bprojects?\b/i,
+  /^list\s+projects?$/i,
+  /^show\s+projects?$/i,
+  /^what\s+projects?\b/i,
+  /^my\s+projects?$/i,
 ];
 
 const SWITCH_PATTERNS = [
