@@ -3,15 +3,13 @@ import bolt from '@slack/bolt';
 const { App } = bolt;
 import http from 'http';
 import fs from 'fs';
-import { routeMessage, getSession } from './messages.js';
+import { routeMessage } from './messages.js';
+import { getSession, resetSession } from './session.js';
 import { listProjects, matchProject } from './projects.js';
 import { runClaude } from './claude.js';
 import { chunkResponse } from './chunker.js';
 
 const PROJECTS_DIR = process.env.PROJECTS_DIR || `${process.env.HOME}/Projects`;
-const ALLOWED_USER_IDS = process.env.ALLOWED_USER_IDS
-  ? process.env.ALLOWED_USER_IDS.split(',').map((id) => id.trim())
-  : [];
 
 const app = new App({
   token: process.env.SLACK_BOT_TOKEN,
@@ -31,34 +29,31 @@ const healthServer = http.createServer((req, res) => {
 });
 
 app.message(async ({ message, say, client }) => {
-  // Ignore non-DM messages, bot messages, and message edits
   if (message.channel_type !== 'im') return;
   if (message.subtype) return;
   if (!message.text) return;
 
-  const userId = message.user;
-
-  // Optional user allowlist
-  if (ALLOWED_USER_IDS.length > 0 && !ALLOWED_USER_IDS.includes(userId)) {
-    return;
-  }
-
   const route = routeMessage(message.text);
-  const session = getSession(userId);
+  const session = getSession();
 
-  // Prefix helper — shows current project like a terminal prompt
   const prefix = session.activeProject
     ? `:file_folder: *${session.activeProject}* ~ `
     : '';
 
   switch (route.type) {
+    case 'new_chat': {
+      resetSession();
+      await say(`${prefix}:sparkles: Fresh conversation started.`);
+      break;
+    }
+
     case 'list_projects': {
       const projects = listProjects(PROJECTS_DIR);
       if (projects.length === 0) {
-        await say(`${prefix}No projects found in the projects directory.`);
+        await say(`${prefix}No projects found.`);
       } else {
         const list = projects.map((p) => `• ${p}`).join('\n');
-        await say(`${prefix}Here are your projects:\n${list}`);
+        await say(`${prefix}Projects:\n${list}`);
       }
       break;
     }
@@ -68,11 +63,12 @@ app.message(async ({ message, say, client }) => {
       const match = matchProject(route.query, projects);
       if (match) {
         session.activeProject = match;
+        resetSession(); // new project = fresh conversation
         await say(`:file_folder: *${match}* ~ Switched. What do you want to do?`);
       } else {
         const list = projects.map((p) => `• ${p}`).join('\n');
         await say(
-          `${prefix}Couldn't find a project matching "${route.query}". Available projects:\n${list}`
+          `${prefix}No match for "${route.query}". Available:\n${list}`
         );
       }
       break;
@@ -91,9 +87,7 @@ app.message(async ({ message, say, client }) => {
       if (!session.activeProject) {
         const projects = listProjects(PROJECTS_DIR);
         const list = projects.map((p) => `• ${p}`).join('\n');
-        await say(
-          `No project selected. Say "work on <project>".\n\nAvailable:\n${list}`
-        );
+        await say(`No project selected. Say "work on <project>".\n\nAvailable:\n${list}`);
         return;
       }
 
@@ -104,27 +98,66 @@ app.message(async ({ message, say, client }) => {
 
       session.busy = true;
 
-      // Quote the prompt and acknowledge receipt
-      const promptMsg = await say(`${prefix}> ${route.prompt}\n\n:hourglass_flowing_sand: Working on it...`);
-      const thread_ts = promptMsg.ts;
+      // Post initial "working" message that we'll update in-place
+      const statusMsg = await say(`${prefix}> ${route.prompt}\n\n:hourglass_flowing_sand: Working...`);
+
+      // Streaming: accumulate text, update Slack message periodically
+      let accumulated = '';
+      let lastUpdate = 0;
+      const UPDATE_INTERVAL = 2000;
+
+      const onProgress = async (text) => {
+        accumulated += text;
+        const now = Date.now();
+        if (now - lastUpdate > UPDATE_INTERVAL) {
+          lastUpdate = now;
+          const preview = accumulated.length > 3800
+            ? '...' + accumulated.slice(-3800)
+            : accumulated;
+          try {
+            await client.chat.update({
+              channel: message.channel,
+              ts: statusMsg.ts,
+              text: `${prefix}> ${route.prompt}\n\n${preview}\n\n:hourglass_flowing_sand: _working..._`,
+            });
+          } catch {
+            // rate limited or other error, skip update
+          }
+        }
+      };
 
       try {
         const result = await runClaude(
           route.prompt,
-          `${PROJECTS_DIR}/${session.activeProject}`
+          `${PROJECTS_DIR}/${session.activeProject}`,
+          {
+            sessionId: session.sessionId,
+            isNew: session.isNewSession,
+            onProgress,
+          }
         );
+
+        session.markUsed();
 
         if (result.success) {
           const chunks = chunkResponse(result.output);
-          for (let i = 0; i < chunks.length; i++) {
-            await client.chat.postMessage({
+          if (chunks.length > 0) {
+            // Update the status message with final response (or first chunk)
+            await client.chat.update({
               channel: message.channel,
-              thread_ts,
-              text: chunks[i],
+              ts: statusMsg.ts,
+              text: `${prefix}> ${route.prompt}\n\n${chunks[0]}`,
             });
-            // Rate limit: 1 msg/sec
-            if (i < chunks.length - 1) {
-              await new Promise((r) => setTimeout(r, 1000));
+            // Post remaining chunks as replies
+            for (let i = 1; i < chunks.length; i++) {
+              await client.chat.postMessage({
+                channel: message.channel,
+                thread_ts: statusMsg.ts,
+                text: chunks[i],
+              });
+              if (i < chunks.length - 1) {
+                await new Promise((r) => setTimeout(r, 1000));
+              }
             }
           }
           await client.reactions.add({
@@ -133,15 +166,10 @@ app.message(async ({ message, say, client }) => {
             name: 'white_check_mark',
           });
         } else {
-          await client.chat.postMessage({
+          await client.chat.update({
             channel: message.channel,
-            thread_ts,
-            text: `Error: ${result.error}`,
-          });
-          await client.reactions.add({
-            channel: message.channel,
-            timestamp: message.ts,
-            name: 'x',
+            ts: statusMsg.ts,
+            text: `${prefix}> ${route.prompt}\n\n:x: ${result.error}`,
           });
         }
       } finally {
@@ -158,7 +186,6 @@ setInterval(() => {
 }, 60_000);
 
 (async () => {
-  // Verify projects directory is accessible
   try {
     fs.readdirSync(PROJECTS_DIR);
   } catch (err) {
