@@ -34,6 +34,7 @@ app.message(async ({ message, say, client }) => {
   if (!message.text) return;
 
   const route = routeMessage(message.text);
+  console.log(`[route] text=${JSON.stringify(message.text)} → ${route.type}`);
   const session = getSession();
 
   const shortId = session.sessionId.slice(0, 4);
