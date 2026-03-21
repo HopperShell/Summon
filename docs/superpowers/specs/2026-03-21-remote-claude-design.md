@@ -55,7 +55,7 @@ The bot remembers your active project for the session. You can switch anytime wi
 
 - Created in the Slack API dashboard
 - **Socket Mode** enabled — no public URL needed
-- Bot token scopes: `chat:write`, `im:history`, `im:read`, `im:write`
+- Bot token scopes: `chat:write`, `im:history`, `im:read`, `im:write`, `reactions:write`
 - App-level token for Socket Mode connection
 - Listens for direct messages to the bot (DM-only for v1 — channel messages are ignored)
 
@@ -99,12 +99,12 @@ services:
     build: .
     restart: always
     volumes:
-      - ~/Projects:/projects:rw             # User's project directories
+      - ~/.claude:/home/node/.claude         # OAuth auth + config (Claude Max)
+      - ~/Projects:/projects:rw              # User's project directories
     environment:
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
       - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
       - PROJECTS_DIR=/projects
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}   # Use API key auth (simpler than OAuth in Docker)
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
       interval: 30s
@@ -163,7 +163,7 @@ Strategy:
 
 - **Slack auth is the perimeter** — only users in your Slack workspace can message the bot
 - **Single-user mode for v1** — the bot responds to any DM. If you want to lock it to just your user ID, set `ALLOWED_USER_IDS` env var
-- **No secrets in the image** — tokens come from env vars / `.env` file
+- **No secrets in the image** — Slack tokens come from env vars / `.env` file. Claude auth is mounted from the host's `~/.claude` (OAuth via Claude Max)
 - **Projects mounted read-write** — Claude needs to edit files. This is intentional.
 
 ## File Structure

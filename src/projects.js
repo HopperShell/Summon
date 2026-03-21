@@ -3,7 +3,7 @@ import fs from 'fs';
 export function listProjects(projectsDir) {
   const entries = fs.readdirSync(projectsDir, { withFileTypes: true });
   return entries
-    .filter((e) => e.isDirectory())
+    .filter((e) => e.isDirectory() && !e.name.startsWith('.'))
     .map((e) => e.name)
     .sort();
 }

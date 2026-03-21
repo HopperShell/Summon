@@ -34,6 +34,7 @@ app.message(async ({ message, say, client }) => {
   // Ignore non-DM messages, bot messages, and message edits
   if (message.channel_type !== 'im') return;
   if (message.subtype) return;
+  if (!message.text) return;
 
   const userId = message.user;
 
