@@ -36,14 +36,16 @@ app.message(async ({ message, say, client }) => {
   const route = routeMessage(message.text);
   const session = getSession();
 
+  const shortId = session.sessionId.slice(0, 4);
   const prefix = session.activeProject
-    ? `:file_folder: *${session.activeProject}* ~ `
+    ? `:file_folder: *${session.activeProject}* \`[${shortId}]\` ~ `
     : '';
 
   switch (route.type) {
     case 'new_chat': {
       resetSession();
-      await say(`${prefix}:sparkles: Fresh conversation started.`);
+      const newId = getSession().sessionId.slice(0, 4);
+      await say(`${prefix}:sparkles: Fresh conversation started. \`[${newId}]\``);
       break;
     }
 
