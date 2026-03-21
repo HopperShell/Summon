@@ -4,6 +4,7 @@ services:
     restart: always
     volumes:
       - ~/.claude:/home/node/.claude
+      - ~/.claude.json:/home/node/.claude.json
       - ~/Projects:/projects:rw
     environment:
       - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
