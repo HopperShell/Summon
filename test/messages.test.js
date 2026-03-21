@@ -14,9 +14,17 @@ describe('routeMessage', () => {
   });
 
   it('detects list projects command', () => {
-    expect(routeMessage('what projects do I have?')).toEqual({ type: 'list_projects' });
-    expect(routeMessage('list my projects')).toEqual({ type: 'list_projects' });
+    expect(routeMessage('list projects')).toEqual({ type: 'list_projects' });
     expect(routeMessage('show projects')).toEqual({ type: 'list_projects' });
+    expect(routeMessage('what projects')).toEqual({ type: 'list_projects' });
+    expect(routeMessage('my projects')).toEqual({ type: 'list_projects' });
+  });
+
+  it('does not match list projects for general questions', () => {
+    expect(routeMessage('what files are in this project')).toEqual({
+      type: 'claude_prompt',
+      prompt: 'what files are in this project',
+    });
   });
 
   it('detects switch project command', () => {
