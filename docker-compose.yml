@@ -1,0 +1,21 @@
+services:
+  remote-claude:
+    build: .
+    restart: always
+    volumes:
+      - ~/.claude:/home/node/.claude
+      - ~/Projects:/projects:rw
+    environment:
+      - SLACK_BOT_TOKEN=${SLACK_BOT_TOKEN}
+      - SLACK_APP_TOKEN=${SLACK_APP_TOKEN}
+      - PROJECTS_DIR=/projects
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
