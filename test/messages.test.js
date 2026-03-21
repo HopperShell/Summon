@@ -4,7 +4,12 @@ import { routeMessage } from '../src/messages.js';
 describe('routeMessage', () => {
   it('detects new chat command', () => {
     expect(routeMessage('new chat')).toEqual({ type: 'new_chat' });
+    expect(routeMessage('New Chat')).toEqual({ type: 'new_chat' });
+    expect(routeMessage('NEW CHAT')).toEqual({ type: 'new_chat' });
+    expect(routeMessage('new  chat')).toEqual({ type: 'new_chat' });
+    expect(routeMessage('  new chat  ')).toEqual({ type: 'new_chat' });
     expect(routeMessage('start over')).toEqual({ type: 'new_chat' });
+    expect(routeMessage('Start Over')).toEqual({ type: 'new_chat' });
     expect(routeMessage('reset')).toEqual({ type: 'new_chat' });
   });
 

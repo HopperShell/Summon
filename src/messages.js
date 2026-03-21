@@ -1,6 +1,6 @@
 const NEW_CHAT_PATTERNS = [
-  /^new chat$/i,
-  /^start over$/i,
+  /\bnew\s+chat\b/i,
+  /\bstart\s+over\b/i,
   /^reset$/i,
 ];
 
