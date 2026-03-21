@@ -1,0 +1,24 @@
+{
+  "name": "remote-claude",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "type": "module",
+  "scripts": {
+    "start": "node src/index.js",
+    "test": "vitest run"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@slack/bolt": "^4.6.0",
+    "tree-kill": "^1.2.2"
+  },
+  "devDependencies": {
+    "vitest": "^4.1.0"
+  }
+}
