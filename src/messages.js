@@ -9,7 +9,7 @@ const LIST_PATTERNS = [
 ];
 
 const SWITCH_PATTERNS = [
-  /\b(?:work on|switch to|use)\s+(.+)/i,
+  /(?:work on|switch to|open|use)\s+(.+)/i,
 ];
 
 const CURRENT_PATTERNS = [

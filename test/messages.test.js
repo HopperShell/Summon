@@ -21,7 +21,10 @@ describe('routeMessage', () => {
 
   it('detects switch project command', () => {
     expect(routeMessage('work on my-app')).toEqual({ type: 'switch_project', query: 'my-app' });
+    expect(routeMessage('lets work on my-app')).toEqual({ type: 'switch_project', query: 'my-app' });
+    expect(routeMessage("let's work on my-app")).toEqual({ type: 'switch_project', query: 'my-app' });
     expect(routeMessage('switch to portfolio')).toEqual({ type: 'switch_project', query: 'portfolio' });
+    expect(routeMessage('open my-app')).toEqual({ type: 'switch_project', query: 'my-app' });
   });
 
   it('detects current project query', () => {
