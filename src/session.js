@@ -2,7 +2,7 @@ import crypto from 'crypto';
 import fs from 'fs';
 import path from 'path';
 
-let session = null;
+const sessions = new Map();
 
 function createSession(activeProject = null) {
   const sessionId = crypto.randomUUID();
@@ -45,21 +45,18 @@ function cleanupSessionFiles(sessionId) {
   }
 }
 
-export function getSession() {
-  if (!session) {
-    session = createSession();
+export function getSession(key) {
+  if (!sessions.has(key)) {
+    sessions.set(key, createSession());
   }
-  return session;
+  return sessions.get(key);
 }
 
-export function resetSession() {
-  const oldId = session?.sessionId;
-  const activeProject = session?.activeProject ?? null;
-
-  // Clean up old session files from disk
-  if (oldId && session && !session.isNewSession) {
-    cleanupSessionFiles(oldId);
+export function resetSession(key) {
+  const old = sessions.get(key);
+  const activeProject = old?.activeProject ?? null;
+  if (old?.sessionId && !old.isNewSession) {
+    cleanupSessionFiles(old.sessionId);
   }
-
-  session = createSession(activeProject);
+  sessions.set(key, createSession(activeProject));
 }

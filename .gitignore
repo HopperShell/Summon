@@ -20,7 +20,15 @@ Thumbs.db
 # Logs
 logs/
 *.log
+bot.log
 npm-debug.log*
+
+# Google OAuth
+credentials.json
+token.json
+
+# WhatsApp auth
+auth_info/
 
 # Runtime
 pids/
