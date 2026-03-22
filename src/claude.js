@@ -1,5 +1,6 @@
 import { spawn } from 'child_process';
 import kill from 'tree-kill';
+import { loadSkills } from './skills.js';
 
 const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
@@ -20,7 +21,9 @@ Keep responses well-structured with short paragraphs. Use markdown formatting.`;
 
 const GENERAL_PROMPT = `You are a personal assistant in a chat conversation. You can help with questions, planning, research, writing, and general tasks. Be conversational and helpful. Use markdown formatting.
 
-Keep responses concise and well-structured. If the user asks about their schedule or calendar, let them know they can use !calendar commands.`;
+Keep responses concise and well-structured.`;
+
+const SKILLS_PROMPT = loadSkills();
 
 export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgress } = {}) {
   const args = ['-p', prompt];
@@ -34,7 +37,8 @@ export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgre
   }
 
   const isGeneral = !projectDir;
-  args.push('--append-system-prompt', isGeneral ? GENERAL_PROMPT : CODING_PROMPT);
+  const systemPrompt = (isGeneral ? GENERAL_PROMPT : CODING_PROMPT) + SKILLS_PROMPT;
+  args.push('--append-system-prompt', systemPrompt);
   args.push('--output-format', 'stream-json', '--verbose');
 
   if (!isGeneral) {
