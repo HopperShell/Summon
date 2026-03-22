@@ -18,6 +18,12 @@ export function routeMessage(text) {
         return { type: 'current_project' };
       case 'help':
         return { type: 'help' };
+      case 'stop':
+      case 'general':
+        return { type: 'exit_project' };
+      case 'calendar':
+      case 'cal':
+        return { type: 'calendar', subcommand: parts[1] || 'today', args: parts.slice(2).join(' ') };
       default:
         return { type: 'help' };
     }
