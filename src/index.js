@@ -6,6 +6,7 @@ import { SlackAdapter } from './adapters/slack.js';
 import { DiscordAdapter } from './adapters/discord.js';
 import { TelegramAdapter } from './adapters/telegram.js';
 import { WhatsAppAdapter } from './adapters/whatsapp.js';
+import { initCalendar } from './calendar.js';
 
 const PROJECTS_DIR = process.env.PROJECTS_DIR || `${process.env.HOME}/Projects`;
 
@@ -43,6 +44,13 @@ setInterval(() => {
   } catch (err) {
     console.error(`FATAL: Cannot read PROJECTS_DIR (${PROJECTS_DIR}): ${err.message}`);
     process.exit(1);
+  }
+
+  const calendarReady = initCalendar();
+  if (calendarReady) {
+    console.log('Google Calendar connected');
+  } else {
+    console.log('Google Calendar not configured (missing credentials.json or token.json)');
   }
 
   for (const adapter of adapters) {

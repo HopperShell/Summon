@@ -4,6 +4,7 @@ import { listProjects, matchProject } from './projects.js';
 import { runClaude } from './claude.js';
 import { chunkResponse } from './chunker.js';
 import { convertMarkdown } from './markdown.js';
+import { handleCalendarCommand } from './calendar-handler.js';
 
 const PROJECTS_DIR = process.env.PROJECTS_DIR || `${process.env.HOME}/Projects`;
 
@@ -23,16 +24,23 @@ export async function handleMessage({ adapter, chatId, text, userId, originalTs 
 
   switch (route.type) {
     case 'help': {
-      await adapter.sendMessage(chatId, fmt([
+      const lines = [
         '*Commands:*',
-        '`!work <project>` — switch to a project',
+        '`!work <project>` — switch to a project (coding mode)',
+        '`!stop` / `!general` — exit project, back to general mode',
         '`!projects` — list available projects',
+        '`!calendar` / `!cal` — today\'s events',
+        '`!calendar week` — this week\'s events',
+        '`!calendar add <event> at <time>` — create an event',
         '`!new` — start a fresh conversation',
         '`!status` — show current project & session',
         '`!help` — show this message',
         '',
-        'Anything else goes straight to Claude.',
-      ].join('\n')));
+        session.activeProject
+          ? `Currently in *coding mode* on *${session.activeProject}*. Messages go to Claude Code.`
+          : 'Currently in *general mode*. Messages go to Claude as a general assistant.',
+      ];
+      await adapter.sendMessage(chatId, fmt(lines.join('\n')));
       break;
     }
 
@@ -79,14 +87,24 @@ export async function handleMessage({ adapter, chatId, text, userId, originalTs 
       break;
     }
 
-    case 'claude_prompt': {
-      if (!session.activeProject) {
-        const projects = listProjects(PROJECTS_DIR);
-        const list = projects.map((p) => `• ${p}`).join('\n');
-        await adapter.sendMessage(chatId, fmt(`No project selected. Say "work on <project>".\n\nAvailable:\n${list}`));
-        return;
+    case 'exit_project': {
+      if (session.activeProject) {
+        session.activeProject = null;
+        resetSession(sessionKey);
+        await adapter.sendMessage(chatId, fmt('Back to general mode.'));
+      } else {
+        await adapter.sendMessage(chatId, fmt('Already in general mode.'));
       }
+      break;
+    }
 
+    case 'calendar': {
+      const result = await handleCalendarCommand(route.subcommand, route.args);
+      await adapter.sendMessage(chatId, fmt(result));
+      break;
+    }
+
+    case 'claude_prompt': {
       if (session.busy) {
         await adapter.sendMessage(chatId, fmt('Still working on your last request...'));
         return;
@@ -96,6 +114,9 @@ export async function handleMessage({ adapter, chatId, text, userId, originalTs 
 
       const maxLen = adapter.capabilities.maxMessageLength;
       const canEdit = adapter.capabilities.canEditMessages;
+      const projectDir = session.activeProject
+        ? `${PROJECTS_DIR}/${session.activeProject}`
+        : null;
 
       // Post initial "working" message
       const statusRef = await adapter.sendMessage(chatId, fmt(`${prefix}> ${route.prompt}\n\n:hourglass_flowing_sand: Working...`));
@@ -130,7 +151,7 @@ export async function handleMessage({ adapter, chatId, text, userId, originalTs 
       try {
         const result = await runClaude(
           route.prompt,
-          `${PROJECTS_DIR}/${session.activeProject}`,
+          projectDir,
           {
             sessionId: session.sessionId,
             isNew: session.isNewSession,

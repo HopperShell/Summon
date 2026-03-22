@@ -3,7 +3,7 @@ import kill from 'tree-kill';
 
 const TIMEOUT_MS = 10 * 60 * 1000; // 10 minutes
 
-const SYSTEM_PROMPT = `You are a coding assistant in a Slack conversation. You have full access to the project's codebase.
+const CODING_PROMPT = `You are a coding assistant in a chat conversation. You have full access to the project's codebase.
 
 When you complete a task:
 - Explain what you changed and why, with relevant code snippets
@@ -16,7 +16,11 @@ When asked questions:
 - Show relevant code when it helps explain
 - Ask clarifying questions when the request is ambiguous
 
-Keep responses well-structured with short paragraphs. Use markdown formatting — it renders in Slack.`;
+Keep responses well-structured with short paragraphs. Use markdown formatting.`;
+
+const GENERAL_PROMPT = `You are a personal assistant in a chat conversation. You can help with questions, planning, research, writing, and general tasks. Be conversational and helpful. Use markdown formatting.
+
+Keep responses concise and well-structured. If the user asks about their schedule or calendar, let them know they can use !calendar commands.`;
 
 export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgress } = {}) {
   const args = ['-p', prompt];
@@ -29,12 +33,16 @@ export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgre
     }
   }
 
-  args.push('--append-system-prompt', SYSTEM_PROMPT);
+  const isGeneral = !projectDir;
+  args.push('--append-system-prompt', isGeneral ? GENERAL_PROMPT : CODING_PROMPT);
   args.push('--output-format', 'stream-json', '--verbose');
-  args.push('--dangerously-skip-permissions');
+
+  if (!isGeneral) {
+    args.push('--dangerously-skip-permissions');
+  }
 
   const proc = spawn('claude', args, {
-    cwd: projectDir,
+    cwd: projectDir || process.env.HOME,
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, NO_COLOR: '1' },
   });

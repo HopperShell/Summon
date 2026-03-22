@@ -29,6 +29,30 @@ describe('routeMessage', () => {
     expect(routeMessage('!help')).toEqual({ type: 'help' });
   });
 
+  it('routes !stop to exit_project', () => {
+    expect(routeMessage('!stop')).toEqual({ type: 'exit_project' });
+  });
+
+  it('routes !general to exit_project', () => {
+    expect(routeMessage('!general')).toEqual({ type: 'exit_project' });
+  });
+
+  it('routes !calendar to calendar with defaults', () => {
+    expect(routeMessage('!calendar')).toEqual({ type: 'calendar', subcommand: 'today', args: '' });
+  });
+
+  it('routes !cal to calendar with defaults', () => {
+    expect(routeMessage('!cal')).toEqual({ type: 'calendar', subcommand: 'today', args: '' });
+  });
+
+  it('routes !calendar week to calendar with subcommand', () => {
+    expect(routeMessage('!calendar week')).toEqual({ type: 'calendar', subcommand: 'week', args: '' });
+  });
+
+  it('routes !calendar add with args', () => {
+    expect(routeMessage('!calendar add Meeting at 3pm')).toEqual({ type: 'calendar', subcommand: 'add', args: 'Meeting at 3pm' });
+  });
+
   it('routes unknown ! commands to help', () => {
     expect(routeMessage('!whatever')).toEqual({ type: 'help' });
   });
