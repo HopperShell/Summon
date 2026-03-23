@@ -10,20 +10,9 @@ Send a message in Slack, Claude works on your codebase and responds. Paste an im
 
 Summon runs on your machine (or a server), connects to your chat apps via their bot APIs, and forwards messages to `claude -p` — the same CLI you use in your terminal. Responses stream back to the chat.
 
-```mermaid
-graph LR
-    You["📱 You"] -->|message or image| Chat["Slack / Discord / Telegram"]
-
-    subgraph Server
-        Summon["Summon"]
-        CLI["Claude Code CLI"]
-        Summon -->|claude -p| CLI
-        CLI -->|response stream| Summon
-    end
-
-    Chat <-->|bot API| Summon
-    Summon -->|reply| Chat
-```
+<p align="center">
+  <img src="docs/architecture.svg" alt="Summon Architecture" width="100%"/>
+</p>
 
 - **Project mode** — `!work my-app` points Claude at a project directory. Every message becomes a coding task with full file access.
 - **General mode** — Without a project selected, Claude acts as a general assistant.
