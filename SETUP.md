@@ -56,14 +56,15 @@ cp .env.example .env
 ## 8. Run
 
 ```bash
-docker compose up -d --build
+npm install
+./start.sh
 ```
 
 ## 9. Verify
 
 1. Open Slack → find "Remote Claude" in your apps → send it a DM
-2. Type: `list projects`
-3. You should see a list of directories from ~/Projects
+2. Type: `!help`
+3. You should see the list of available commands
 
 ---
 
@@ -71,14 +72,11 @@ docker compose up -d --build
 
 ```bash
 # View logs
-docker compose logs -f
+tail -f bot.log
 
 # Restart
-docker compose restart
+kill $(pgrep -f "node src/index.js") && ./start.sh
 
-# Rebuild after code changes
-docker compose up -d --build
-
-# Stop
-docker compose down
+# Run directly (foreground)
+node src/index.js
 ```
