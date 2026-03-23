@@ -24,6 +24,7 @@ Step-by-step instructions for setting up the Slack app and running the bot.
 
 1. OAuth & Permissions → Bot Token Scopes → add:
    - `chat:write`
+   - `files:read` (for image support)
    - `im:history`
    - `im:read`
    - `im:write`
