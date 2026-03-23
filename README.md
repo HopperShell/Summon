@@ -12,27 +12,12 @@ Summon runs on your machine (or a server), connects to your chat apps via their 
 
 ```mermaid
 graph LR
-    subgraph Chat Apps
-        Slack
-        Discord
-        Telegram
-        WhatsApp
-    end
-
-    subgraph Your Machine
-        Summon
-        Claude["claude -p"]
-        Projects["~/Projects/*"]
-    end
-
-    Slack <-->|messages & images| Summon
-    Discord <-->|messages| Summon
-    Telegram <-->|messages| Summon
-    WhatsApp <-->|messages| Summon
-
-    Summon -->|prompt| Claude
-    Claude -->|response| Summon
-    Claude <-->|read, edit, run| Projects
+    You["📱 You"] -->|message or image| Chat["Slack / Discord / Telegram"]
+    Chat <-->|bot API| Summon
+    Summon -->|claude -p| CLI["Claude Code CLI"]
+    CLI -->|response stream| Summon
+    Summon -->|reply| Chat
+    Chat -->|notification| You
 ```
 
 - **Project mode** — `!work my-app` points Claude at a project directory. Every message becomes a coding task with full file access.
