@@ -1,4 +1,5 @@
 import { spawn } from 'child_process';
+import { randomUUID } from 'crypto';
 import kill from 'tree-kill';
 import { loadSkills } from './skills.js';
 
@@ -25,8 +26,37 @@ Keep responses concise and well-structured.`;
 
 const SKILLS_PROMPT = loadSkills();
 
-export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgress } = {}) {
-  const args = ['-p', prompt];
+function buildContentBlocks(prompt, files) {
+  const content = [];
+
+  for (const file of files) {
+    content.push({
+      type: 'image',
+      source: {
+        type: 'base64',
+        media_type: file.mediaType,
+        data: file.base64,
+      },
+    });
+  }
+
+  content.push({ type: 'text', text: prompt });
+
+  return content;
+}
+
+export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgress, files = [] } = {}) {
+  const hasFiles = files.length > 0;
+
+  const args = [];
+
+  if (hasFiles) {
+    // Multimodal: use stream-json input via stdin
+    args.push('-p', '', '--input-format', 'stream-json');
+  } else {
+    // Text-only: pass prompt directly
+    args.push('-p', prompt);
+  }
 
   if (sessionId) {
     if (isNew) {
@@ -41,15 +71,34 @@ export async function runClaude(prompt, projectDir, { sessionId, isNew, onProgre
   args.push('--append-system-prompt', systemPrompt);
   args.push('--output-format', 'stream-json', '--verbose');
 
-  if (!isGeneral) {
-    args.push('--dangerously-skip-permissions');
+  args.push('--dangerously-skip-permissions');
+
+  if (hasFiles) {
+    args.push('--model', 'sonnet');
+  } else if (isGeneral) {
+    args.push('--model', 'haiku');
   }
 
   const proc = spawn('claude', args, {
-    cwd: projectDir || process.env.HOME,
-    stdio: ['ignore', 'pipe', 'pipe'],
+    cwd: projectDir || process.cwd(),
+    stdio: [hasFiles ? 'pipe' : 'ignore', 'pipe', 'pipe'],
     env: { ...process.env, NO_COLOR: '1' },
   });
+
+  // Write multimodal message to stdin
+  if (hasFiles) {
+    const message = {
+      type: 'user',
+      message: {
+        role: 'user',
+        content: buildContentBlocks(prompt, files),
+      },
+      parent_tool_use_id: null,
+      session_id: sessionId || randomUUID(),
+    };
+    proc.stdin.write(JSON.stringify(message) + '\n');
+    proc.stdin.end();
+  }
 
   let fullResult = '';
   let stderr = '';

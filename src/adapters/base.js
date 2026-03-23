@@ -4,6 +4,7 @@ export class BaseAdapter {
     canEditMessages: false,
     canReact: false,
     canThread: false,
+    canSendImages: false,
     maxMessageLength: 4000,
     markdownFormat: 'standard',
   };

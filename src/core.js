@@ -8,8 +8,13 @@ import { handleCalendarCommand } from './calendar-handler.js';
 
 const PROJECTS_DIR = process.env.PROJECTS_DIR || `${process.env.HOME}/Projects`;
 
-export async function handleMessage({ adapter, chatId, text, userId, originalTs }) {
-  const route = routeMessage(text);
+export async function handleMessage({ adapter, chatId, text, userId, originalTs, files = [] }) {
+  // Default prompt for image-only messages
+  if (files.length > 0 && !text?.trim()) {
+    text = 'What\'s in this image?';
+  }
+
+  const route = routeMessage(text || '');
   console.log(`[route] text=${JSON.stringify(text)} → ${route.type}`);
 
   const sessionKey = `${adapter.name}:${chatId}`;
@@ -156,6 +161,7 @@ export async function handleMessage({ adapter, chatId, text, userId, originalTs 
             sessionId: session.sessionId,
             isNew: session.isNewSession,
             onProgress,
+            files,
           }
         );
 
