@@ -1,4 +1,8 @@
-# Summon
+<p align="center">
+  <img src="docs/logo.png" alt="Summon" width="200"/>
+</p>
+
+<h1 align="center">Summon</h1>
 
 > **Early beta** — this project is under active development. Things may break, APIs may change. Contributions and feedback welcome.
 

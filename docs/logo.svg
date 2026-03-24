@@ -1,0 +1,124 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="512" y2="512">
+      <stop offset="0%" stop-color="#0c0a1a"/>
+      <stop offset="100%" stop-color="#141028"/>
+    </linearGradient>
+    <linearGradient id="core-grad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
+    </linearGradient>
+    <linearGradient id="core-inner" x1="0.5" y1="0" x2="0.5" y2="1">
+      <stop offset="0%" stop-color="#818cf8"/>
+      <stop offset="100%" stop-color="#6366f1"/>
+    </linearGradient>
+    <filter id="core-glow">
+      <feGaussianBlur stdDeviation="12" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="line-glow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="node-glow">
+      <feGaussianBlur stdDeviation="5" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" fill="url(#bg)"/>
+
+  <!-- Subtle orbit rings -->
+  <circle cx="256" cy="256" r="160" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.15"/>
+  <circle cx="256" cy="256" r="120" fill="none" stroke="#6366f1" stroke-width="0.5" opacity="0.1"/>
+
+  <!-- Connection lines from nodes to center -->
+  <!-- Top - Chat -->
+  <line x1="256" y1="256" x2="256" y2="72" stroke="#6366f1" stroke-width="2" opacity="0.5" filter="url(#line-glow)"/>
+  <!-- Top Right - Code -->
+  <line x1="256" y1="256" x2="415" y2="122" stroke="#8b5cf6" stroke-width="2" opacity="0.4" filter="url(#line-glow)"/>
+  <!-- Bottom Right - Calendar -->
+  <line x1="256" y1="256" x2="415" y2="390" stroke="#a78bfa" stroke-width="2" opacity="0.4" filter="url(#line-glow)"/>
+  <!-- Bottom - Team -->
+  <line x1="256" y1="256" x2="256" y2="440" stroke="#6366f1" stroke-width="2" opacity="0.5" filter="url(#line-glow)"/>
+  <!-- Bottom Left - Image -->
+  <line x1="256" y1="256" x2="97" y2="390" stroke="#a78bfa" stroke-width="2" opacity="0.4" filter="url(#line-glow)"/>
+  <!-- Top Left - Terminal -->
+  <line x1="256" y1="256" x2="97" y2="122" stroke="#8b5cf6" stroke-width="2" opacity="0.4" filter="url(#line-glow)"/>
+
+  <!-- Pulse dots along lines -->
+  <circle cx="256" cy="150" r="3" fill="#818cf8" opacity="0.6"/>
+  <circle cx="350" cy="178" r="2" fill="#a78bfa" opacity="0.4"/>
+  <circle cx="350" cy="334" r="2" fill="#a78bfa" opacity="0.4"/>
+  <circle cx="256" cy="362" r="3" fill="#818cf8" opacity="0.6"/>
+  <circle cx="162" cy="334" r="2" fill="#a78bfa" opacity="0.4"/>
+  <circle cx="162" cy="178" r="2" fill="#a78bfa" opacity="0.4"/>
+
+  <!-- Outer nodes -->
+
+  <!-- Top: Chat bubble -->
+  <g filter="url(#node-glow)">
+    <circle cx="256" cy="72" r="28" fill="#1e1b4b" stroke="#6366f1" stroke-width="2"/>
+    <path d="M244 64 h24 a4 4 0 0 1 4 4 v12 a4 4 0 0 1-4 4 h-14 l-6 6 v-6 h-4 a4 4 0 0 1-4-4 v-12 a4 4 0 0 1 4-4z" fill="#818cf8"/>
+  </g>
+
+  <!-- Top Right: Code brackets -->
+  <g filter="url(#node-glow)">
+    <circle cx="415" cy="122" r="28" fill="#1e1b4b" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="415" y="130" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="24" font-weight="700">&lt;/&gt;</text>
+  </g>
+
+  <!-- Bottom Right: Calendar -->
+  <g filter="url(#node-glow)">
+    <circle cx="415" cy="390" r="28" fill="#1e1b4b" stroke="#a78bfa" stroke-width="2"/>
+    <rect x="400" y="376" width="30" height="26" rx="3" fill="none" stroke="#a78bfa" stroke-width="2"/>
+    <line x1="400" y1="384" x2="430" y2="384" stroke="#a78bfa" stroke-width="2"/>
+    <line x1="408" y1="373" x2="408" y2="379" stroke="#a78bfa" stroke-width="2"/>
+    <line x1="422" y1="373" x2="422" y2="379" stroke="#a78bfa" stroke-width="2"/>
+    <circle cx="410" cy="393" r="2" fill="#a78bfa"/>
+    <circle cx="420" cy="393" r="2" fill="#a78bfa"/>
+  </g>
+
+  <!-- Bottom: Team/Group -->
+  <g filter="url(#node-glow)">
+    <circle cx="256" cy="440" r="28" fill="#1e1b4b" stroke="#6366f1" stroke-width="2"/>
+    <circle cx="248" cy="432" r="6" fill="none" stroke="#818cf8" stroke-width="1.5"/>
+    <path d="M238 448 a10 8 0 0 1 20 0" fill="none" stroke="#818cf8" stroke-width="1.5"/>
+    <circle cx="264" cy="432" r="6" fill="none" stroke="#818cf8" stroke-width="1.5"/>
+    <path d="M254 448 a10 8 0 0 1 20 0" fill="none" stroke="#818cf8" stroke-width="1.5"/>
+  </g>
+
+  <!-- Bottom Left: Image/Vision -->
+  <g filter="url(#node-glow)">
+    <circle cx="97" cy="390" r="28" fill="#1e1b4b" stroke="#a78bfa" stroke-width="2"/>
+    <rect x="81" y="378" width="32" height="24" rx="3" fill="none" stroke="#a78bfa" stroke-width="2"/>
+    <circle cx="91" cy="386" r="3" fill="#a78bfa"/>
+    <polyline points="81,398 91,390 99,396 105,392 113,398" fill="none" stroke="#a78bfa" stroke-width="1.5"/>
+  </g>
+
+  <!-- Top Left: Terminal -->
+  <g filter="url(#node-glow)">
+    <circle cx="97" cy="122" r="28" fill="#1e1b4b" stroke="#8b5cf6" stroke-width="2"/>
+    <text x="97" y="130" text-anchor="middle" fill="#a78bfa" font-family="monospace" font-size="22" font-weight="700">$_</text>
+  </g>
+
+  <!-- Central core node -->
+  <g filter="url(#core-glow)">
+    <circle cx="256" cy="256" r="52" fill="url(#core-grad)"/>
+    <circle cx="256" cy="256" r="38" fill="url(#core-inner)" opacity="0.6"/>
+    <text x="256" y="265" text-anchor="middle" fill="#ffffff" font-family="system-ui, -apple-system, sans-serif" font-size="28" font-weight="800">S</text>
+  </g>
+
+  <!-- Inner core ring -->
+  <circle cx="256" cy="256" r="60" fill="none" stroke="#818cf8" stroke-width="1.5" opacity="0.4"/>
+</svg>
