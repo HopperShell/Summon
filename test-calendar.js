@@ -8,7 +8,10 @@ const { client_id, client_secret, redirect_uris } = creds.installed;
 
 // Use localhost redirect for desktop OAuth flow
 const REDIRECT_URI = 'http://localhost:3333/callback';
-const SCOPES = ['https://www.googleapis.com/auth/calendar'];
+const SCOPES = [
+  'https://www.googleapis.com/auth/calendar',
+  'https://www.googleapis.com/auth/gmail.readonly',
+];
 
 const oauth2Client = new google.auth.OAuth2(client_id, client_secret, REDIRECT_URI);
 
