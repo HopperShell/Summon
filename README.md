@@ -21,8 +21,34 @@ Summon runs on your machine (or a server), connects to your chat apps via their 
 - **Project mode** — `!work my-app` points Claude at a project directory. Every message becomes a coding task with full file access.
 - **General mode** — Without a project selected, Claude acts as a general assistant.
 - **Image support** — Paste screenshots, schedules, diagrams. Claude sees them via vision.
-- **Google Calendar** — Check your schedule, create and delete events.
+- **Skills** — Claude has access to real-time data through built-in skills (see below).
 - **Session continuity** — Conversations persist across messages, so Claude has context.
+
+## Skills
+
+Skills give Claude access to live, personal data it wouldn't otherwise have. Claude automatically uses the right skill based on your message — just ask naturally.
+
+| Skill | What it does | Data source |
+|-------|-------------|-------------|
+| **Calendar** | Check your schedule, create/delete events | Google Calendar |
+| **Gmail** | Search and read your emails | Gmail (read-only) |
+| **Weather** | Current conditions and forecasts | Open-Meteo API |
+| **News** | Headlines and top stories | Google News RSS |
+| **Sports** | Live scores, schedules, standings for 30+ leagues | ESPN |
+| **Packages** | Track deliveries by scanning your Gmail for shipping emails | Gmail + carrier URLs |
+| **Finance** | Account balances, transactions, budgets, net worth, cashflow | Monarch Money |
+| **GroupMe** | Read and send GroupMe messages | GroupMe API |
+
+### Example questions
+
+- "Do I have any meetings tomorrow?"
+- "What's the weather this weekend?"
+- "Did the Vols win?"
+- "Where's my Amazon package?"
+- "How much did I spend on restaurants this month?"
+- "What's my net worth?"
+- "Any new emails from my boss?"
+- "What's the news today?"
 
 ## Supported chat apps
 
@@ -44,7 +70,7 @@ Summon runs on your machine (or a server), connects to your chat apps via their 
 ### 1. Clone and install
 
 ```bash
-git clone https://github.com/your-username/summon.git
+git clone https://github.com/HopperShell/summon.git
 cd summon
 npm install
 ```
@@ -66,7 +92,39 @@ cp .env.example .env
 # Fill in your bot tokens
 ```
 
-### 4. Run
+### 4. Set up skills (optional)
+
+Skills that use public APIs work immediately with no setup. Others need credentials:
+
+#### Weather, News, Sports
+No setup needed — these use free public APIs (Open-Meteo, Google News RSS, ESPN).
+
+#### Gmail & Calendar (Google OAuth)
+1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
+2. Create a project, enable the Gmail API and Google Calendar API
+3. Create OAuth 2.0 credentials (Desktop app type)
+4. Download the credentials file and save as `credentials.json` in the project root
+5. Run the OAuth flow to generate `token.json` (you'll be prompted to authorize in your browser)
+
+#### Packages
+No additional setup — uses the Gmail skill to scan your inbox for shipping emails and extract tracking numbers/URLs. Requires Gmail to be configured (see above).
+
+#### Finance (Monarch Money)
+1. Log in to [app.monarch.com](https://app.monarch.com) in your browser
+2. Open DevTools (F12) → **Network** tab
+3. Filter requests by `api.monarch` to cut through the noise
+4. Click any request to `api.monarch.com` → look at the **Headers** tab
+5. Copy the value after `Authorization: Token ` (the long string of letters/numbers)
+6. Run: `node skills/finance/run.js set-token <your-token>`
+
+The token lasts several months. When it expires, repeat the steps above.
+
+#### GroupMe
+1. Go to [dev.groupme.com](https://dev.groupme.com)
+2. Log in and grab your access token from the top of the page
+3. Add to your `.env` file: `GROUPME_TOKEN=your-token-here`
+
+### 5. Run
 
 ```bash
 ./start.sh
@@ -112,12 +170,24 @@ src/
   projects.js       — Project directory listing
   skills.js         — Skills/tools framework
   calendar.js       — Google Calendar integration
+  gmail.js          — Gmail read-only access
+  monarch.js        — Monarch Money finance integration
+  tracking.js       — Package tracking via Gmail
   adapters/
     base.js         — Base adapter interface
     slack.js        — Slack (Socket Mode)
     discord.js      — Discord
     telegram.js     — Telegram (grammy)
     whatsapp.js     — WhatsApp (Baileys)
+skills/
+  calendar/         — Google Calendar skill
+  finance/          — Monarch Money (accounts, budgets, cashflow)
+  gmail/            — Gmail inbox access
+  groupme/          — GroupMe messaging
+  news/             — News headlines
+  packages/         — Package tracking via Gmail
+  sports/           — ESPN scores and standings
+  weather/          — Weather forecasts
 ```
 
 ## License
