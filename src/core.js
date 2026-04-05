@@ -5,8 +5,9 @@ import { runClaude } from './claude.js';
 import { chunkResponse } from './chunker.js';
 import { convertMarkdown } from './markdown.js';
 import { handleCalendarCommand } from './calendar-handler.js';
+import { resolveProjectsDir } from './paths.js';
 
-const PROJECTS_DIR = process.env.PROJECTS_DIR || `${process.env.HOME}/Projects`;
+const PROJECTS_DIR = resolveProjectsDir();
 
 export async function handleMessage({ adapter, chatId, text, userId, originalTs, files = [] }) {
   // Default prompt for image-only messages

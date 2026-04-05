@@ -7,8 +7,9 @@ import { DiscordAdapter } from './adapters/discord.js';
 import { TelegramAdapter } from './adapters/telegram.js';
 import { WhatsAppAdapter } from './adapters/whatsapp.js';
 import { initCalendar } from './calendar.js';
+import { resolveProjectsDir } from './paths.js';
 
-const PROJECTS_DIR = process.env.PROJECTS_DIR || `${process.env.HOME}/Projects`;
+const PROJECTS_DIR = resolveProjectsDir();
 
 // Health check server
 const healthServer = http.createServer((req, res) => {
