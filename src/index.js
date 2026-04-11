@@ -55,7 +55,9 @@ setInterval(() => {
   }
 
   for (const adapter of adapters) {
-    adapter.onMessage((msg) => handleMessage({ adapter, ...msg }));
+    adapter.onMessage((msg) => handleMessage({ adapter, ...msg }).catch((err) => {
+      console.error(`[${adapter.name}] Unhandled error in handleMessage:`, err);
+    }));
     await adapter.connect();
   }
 

@@ -106,12 +106,43 @@ export class SlackAdapter extends BaseAdapter {
   }
 
   async sendMessage(chatId, text) {
-    const result = await this.client.chat.postMessage({ channel: chatId, text });
-    return { channel: chatId, ts: result.ts };
+    const chunks = this._splitIfTooLong(text);
+    let firstRef;
+    for (const chunk of chunks) {
+      const result = await this.client.chat.postMessage({ channel: chatId, text: chunk });
+      if (!firstRef) firstRef = { channel: chatId, ts: result.ts };
+    }
+    return firstRef;
   }
 
   async updateMessage(ref, text) {
-    await this.client.chat.update({ channel: ref.channel, ts: ref.ts, text });
+    const chunks = this._splitIfTooLong(text);
+    await this.client.chat.update({ channel: ref.channel, ts: ref.ts, text: chunks[0] });
+    for (let i = 1; i < chunks.length; i++) {
+      await this.client.chat.postMessage({ channel: ref.channel, text: chunks[i] });
+    }
+  }
+
+  _splitIfTooLong(text) {
+    const limit = this.capabilities.maxMessageLength;
+    if (text.length <= limit) return [text];
+
+    const chunks = [];
+    let remaining = text;
+    while (remaining.length > 0) {
+      if (remaining.length <= limit) {
+        chunks.push(remaining);
+        break;
+      }
+      // Find a newline to split at
+      const slice = remaining.slice(0, limit);
+      let splitAt = slice.lastIndexOf('\n\n');
+      if (splitAt < limit * 0.3) splitAt = slice.lastIndexOf('\n');
+      if (splitAt < limit * 0.3) splitAt = limit;
+      chunks.push(remaining.slice(0, splitAt).trimEnd());
+      remaining = remaining.slice(splitAt).trimStart();
+    }
+    return chunks;
   }
 
   async addReaction(ref, emoji) {
